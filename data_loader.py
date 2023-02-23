@@ -1,10 +1,19 @@
 import pandas as pd
 
-file1 = open('gnss_log_2023_02_15_16_25_25.txt', 'r')
 
-data = []
-for line in file1:
-    if line[:3] == "Raw":
-        data.append(line)
+def parseFile(filepath):
+    file1 = open(filepath, 'r')
 
-df = pd.DataFrame(data)
+    data = []
+    header = ""
+    for line in file1:
+        if line[:5] == "# Raw":
+            header = line[2:-1].split(",")
+        if line[:3] == "Raw":
+            data.append(line[0:-1].split(","))
+
+    df = pd.DataFrame(data)
+    df.columns = header
+
+    return df
+
