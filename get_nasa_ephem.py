@@ -1,4 +1,13 @@
 from gnss_lib_py.parsers.ephemeris import EphemerisManager
+from datetime import datetime, timezone
+
+def svid_constnum_2_nasa_svid(svid, const_number):
+    '''
+        SVID + constellation number in the csv file from gnss logger
+        to SVID that is used by nasa
+    '''
+    
+    pass
 
 def get_nasa_ephem(target_time, satellites):
     '''
@@ -21,3 +30,9 @@ def get_nasa_ephem(target_time, satellites):
     data = manager.get_ephemeris(target_time, satellites)
     
     return data
+
+if __name__ == "__main__":
+    target_time = datetime(2021, 1, 9, 12, 0, 0, tzinfo=timezone.utc)
+    data = get_nasa_ephem(target_time, ['G01', 'G03'])
+    
+    print(data.columns)
