@@ -18,11 +18,11 @@ def solveNR(M, e, eps=10**-10):
 
 def get_sat_ECEF(ephem, tx_time):
     a = ephem['sqrtA'] ** 2
-    n = np.sqrt(MU / a**3) + ephem['DeltaN']
-    t_k = tx_time - ephem['Toe']
-    M_k = ephem['M0'] + (n * t_k)
+    n = np.sqrt(MU / a**3) + ephem['deltaN']
+    t_k = tx_time - ephem['t_oe']
+    M_k = ephem['M_0'] + (n * t_k)
 
-    e = ephem['Eccentricity']
+    e = ephem['e']
     E_k = solveNR(M_k, e)
 
     sn_nu = (np.sqrt(1 - e ** 2) * np.sin(E_k)) / (1 - e*np.cos(E_k))
@@ -31,19 +31,19 @@ def get_sat_ECEF(ephem, tx_time):
 
     phi_k = nu_k + ephem['omega']
 
-    d_phi_k = ephem['Cus'] * np.sin(2*phi_k) + ephem['Cuc'] * np.cos(2*phi_k)
+    d_phi_k = ephem['C_us'] * np.sin(2*phi_k) + ephem['C_uc'] * np.cos(2*phi_k)
 
     u_k = phi_k + d_phi_k
 
-    d_rk = ephem['Crs'] * np.sin(2*phi_k) + ephem['Crc'] * np.cos(2*phi_k)
+    d_rk = ephem['C_rs'] * np.sin(2*phi_k) + ephem['C_rc'] * np.cos(2*phi_k)
 
-    d_ik = ephem['Cis'] * np.sin(2*phi_k) + ephem['Cic'] * np.cos(2*phi_k)
+    d_ik = ephem['C_is'] * np.sin(2*phi_k) + ephem['C_ic'] * np.cos(2*phi_k)
 
-    Om_k = ephem['Omega0'] - OMDOT_E * tx_time + ephem['OmegaDot'] * t_k
+    Om_k = ephem['Omega_0'] - OMDOT_E * tx_time + ephem['OmegaDot'] * t_k
 
     r_k = a * (1 - e*np.cos(E_k)) + d_rk
 
-    i_k = ephem['Io'] + ephem['IDOT'] * t_k + d_ik
+    i_k = ephem['i_0'] + ephem['IDOT'] * t_k + d_ik
 
     x_p = r_k * np.cos(u_k)
 
@@ -63,7 +63,7 @@ def get_B(ephem, tx_time, E_k):
     t0c = ephem['TransTime']
     tgd = ephem['TGD']
 
-    dt_r = -4.442807633 * 10**-10 * ephem['Eccentricity']**ephem['sqrtA'] * np.sin(E_k)
+    dt_r = -4.442807633 * 10**-10 * ephem['e']**ephem['sqrtA'] * np.sin(E_k)
 
     d_tsv = af0 + af1 * (tx_time - t0c) + af2 * (tx_time - t0c) ** 2 + dt_r - tgd
 
