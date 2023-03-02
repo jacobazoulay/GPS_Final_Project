@@ -13,11 +13,14 @@ UNKN: 0
 '''
 
 
-def svid_constnum_2_nasa_svid(svid, const_number):
+def svid_constnum_2_nasa_svid(row):
     '''
         SVID + constellation number in the csv file from gnss logger
         to SVID that is used by nasa
     '''
+    const_number = int(row["ConstellationType"])
+    svid = row["Svid"]
+
     const_num_2_name = {1:"G",   # GPS
                        3:"R",   # GLONASS
                        6:"E",   # Galileo
@@ -43,6 +46,8 @@ def get_nasa_ephem(target_time, satellites):
             DataFrame containing ephemeris entries corresponding to timestamp
     '''
     # May want to not initialize this more than once
+    print(target_time)
+    print(satellites)
     manager = EphemerisManager()
     data = manager.get_ephemeris(target_time, satellites)
     
