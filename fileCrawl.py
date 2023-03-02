@@ -30,6 +30,12 @@ def pre_process_files(filePaths, transittype):
     for filePath in filePaths:
         # Data
         output = parseFile(filePath, transittype)
+        transit_types = output["TransitType"]
+
+        needed_cols = ['Svid', 'ReceivedSvTimeNanos',"FullBiasNanos", "TimeNanos", "TimeOffsetNanos", "BiasNanos","ConstellationType"]
+        output = output[output.columns.intersection(needed_cols)]
+        output = output.apply(pd.to_numeric)
+        output["TransitType"] = transit_types
         
         # Date time
         file_name_full = os.path.splitext(filePath)[0]
@@ -39,13 +45,14 @@ def pre_process_files(filePaths, transittype):
         date_time = datetime(*date_time,tzinfo=timezone.utc)
         
         # SVID
-        output = output[output["ConstellationType"] != '6'] # galileo doesn't work :(
-        output['nasaSvid'] =  output.apply(lambda row: nasa.svid_constnum_2_nasa_svid(row), axis=1)
+        output = output[output["ConstellationType"] != 6] # galileo doesn't work :(
+        output['Svid'] =  output.apply(lambda row: nasa.svid_constnum_2_nasa_svid(row), axis=1)
+        output.drop("ConstellationType", axis=1, inplace=True)
         
         # Ephemeris
-        ephem = nasa.get_nasa_ephem(date_time, output['nasaSvid'].unique().tolist())
+        ephem = nasa.get_nasa_ephem(date_time, output['Svid'].unique().tolist())
         results[file_name_full] = {"data": output, "ephemerides": ephem}
-        
+          
     return results
 
 
