@@ -23,13 +23,13 @@ def parseFile(filepath, transittype="n/a"):
 
     return df
 
-def pre_process_files(filePaths):
+def pre_process_files(filePaths, transittype):
     results = {}
     
     # Data from file
     for filePath in filePaths:
         # Data
-        output = parseFile(filePath, "Bike")
+        output = parseFile(filePath, transittype)
         
         # Date time
         file_name_full = os.path.splitext(filePath)[0]
@@ -51,9 +51,9 @@ def pre_process_files(filePaths):
 
 def crawl():
     #go over each text file in directory
-    bike = pre_process_files(glob.glob(os.path.join("Bike/", "*.txt")))    
-    car = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")))
-    walk = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")))
+    bike = pre_process_files(glob.glob(os.path.join("Bike/", "*.txt")), "Bike")    
+    car = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")), "Car")
+    walk = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")), "Walk")
 
     return {"bike": bike, "car": car, "walk": walk}
 
