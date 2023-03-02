@@ -46,16 +46,18 @@ def get_nasa_ephem(target_time, satellites):
             DataFrame containing ephemeris entries corresponding to timestamp
     '''
     # May want to not initialize this more than once
-    print(target_time)
-    print(satellites)
     manager = EphemerisManager()
     data = manager.get_ephemeris(target_time, satellites)
     
     return data
 
 if __name__ == "__main__":
-    target_time = datetime(2021, 1, 9, 12, 0, 0, tzinfo=timezone.utc)
-    data = get_nasa_ephem(target_time, ['G01', 'G03'])
+    target_time = datetime(2023, 2, 22, 12, 16, 25, tzinfo=timezone.utc)
+    list1 = ['G01', 'G03']
+    list2 = ['G07', 'E30', 'G04', 'G05', 'G14', 'G16', 'G08', 'G27', 'G09', 'E07', 'G30', 'G20', 'E08', 'E27', 'E19', 'E21']
+    list3 = ['G07', 'R16', 'R07', 'E30', 'G04', 'R15', 'G05', 'G14', 'G16', 'G08', 'G27', 'G09', 'R05', 'E07', 'G30', 'G20', 'E08', 'E27', 'E19', 'E21', 'R09', 'R06']
+    list4 = ['G07', 'G04', 'G05', 'G14', 'G16', 'G08', 'G27', 'G09', 'G30', 'G20']
+    list5 = []
+    data = get_nasa_ephem(target_time, list4)  
     
-    print(svid_constnum_2_nasa_svid(2,1))
-    print(svid_constnum_2_nasa_svid(10,3))
+    print(data)

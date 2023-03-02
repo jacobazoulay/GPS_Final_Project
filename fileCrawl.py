@@ -23,71 +23,39 @@ def parseFile(filepath, transittype="n/a"):
 
     return df
 
+def pre_process_files(filePaths):
+    results = {}
+    
+    # Data from file
+    for filePath in filePaths:
+        # Data
+        output = parseFile(filePath, "Bike")
+        
+        # Date time
+        file_name_full = os.path.splitext(filePath)[0]
+        file_name = file_name_full.split("_")
+        date_time = file_name[2:7]
+        date_time = list(map(int,date_time))
+        date_time = datetime(*date_time,tzinfo=timezone.utc)
+        
+        # SVID
+        output = output[output["ConstellationType"] != '6'] # galileo doesn't work :(
+        output['nasaSvid'] =  output.apply(lambda row: nasa.svid_constnum_2_nasa_svid(row), axis=1)
+        
+        # Ephemeris
+        ephem = nasa.get_nasa_ephem(date_time, output['nasaSvid'].unique().tolist())
+        results[file_name_full] = {"data": output, "ephemerides": ephem}
+        
+    return results
+
 
 def crawl():
-    bike_list = []
-    car_list = []
-    walk_list = []
-    bike_date_list = []
-    car_date_list = []
-    walk_date_list = []
-    bike_ephem = []
-    car_ephem=[]
-    walk_ephem=[]
-
-
-
     #go over each text file in directory
-    for filePath in glob.glob(os.path.join("Bike/", "*.txt")):
-        output = parseFile(filePath, "Bike")
-        file_name = os.path.splitext(filePath)[0]
-        file_name = file_name.split("_")
-        date_time = file_name[2:8]
-        date_time = list(map(int,date_time))
-        date_time = datetime(*date_time,tzinfo=timezone.utc)
-        output['nasaSvid'] =  output.apply(lambda row: nasa.svid_constnum_2_nasa_svid(row), axis=1)
+    bike = pre_process_files(glob.glob(os.path.join("Bike/", "*.txt")))    
+    car = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")))
+    walk = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")))
 
-        bike_date_list.append(date_time)
-        bike_list.append(output)
-        # print(output)
-
-    for filePath in glob.glob(os.path.join("Car/", "*.txt")):
-        output1 = parseFile(filePath, "Car")
-        file_name = os.path.splitext(filePath)[0]
-        file_name = file_name.split("_")
-        date_time = file_name[2:8]
-        date_time = list(map(int,date_time))
-        date_time = datetime(*date_time,tzinfo=timezone.utc)
-        output1['nasaSvid'] =  output1.apply(lambda row: nasa.svid_constnum_2_nasa_svid(row), axis=1)
-
-        car_date_list.append(date_time)
-        car_list.append(output1)
-        # print(output1)
-
-    for filePath in glob.glob(os.path.join("Walk/", "*.txt")):
-        output2 = parseFile(filePath, "Walk")
-        file_name = os.path.splitext(filePath)[0]
-        file_name = file_name.split("_")
-        date_time = file_name[2:8]
-        date_time = list(map(int,date_time))
-        date_time = datetime(*date_time,tzinfo=timezone.utc)
-        output2['nasaSvid'] =  output2.apply(lambda row: nasa.svid_constnum_2_nasa_svid(row), axis=1)
-
-        walk_date_list.append(date_time)
-        walk_list.append(output2)
-        # print(output2)
-
-
-
-    # print(bike_list)
-    # print(car_list)
-    # print(walk_list)
-    # print(bike_date_list)
-    # print(car_date_list)
-    # print(walk_date_list)
-    # print(bike_date_list[0])
-    print(bike_list[0]['nasaSvid'].unique())
-    print(nasa.get_nasa_ephem(bike_date_list[0],bike_list[0]['nasaSvid'].unique()))
+    return {"bike": bike, "car": car, "walk": walk}
 
 
 if __name__ == '__main__':
