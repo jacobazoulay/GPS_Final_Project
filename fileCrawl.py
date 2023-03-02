@@ -63,6 +63,13 @@ def crawl():
     car = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Car")
     walk = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Walk")
 
+    eph = bike["gnss_log_2023_02_08_16_23_57.txt"]["ephemerides"]
+    dat = bike["gnss_log_2023_02_08_16_23_57.txt"]["data"]
+
+    eph.to_csv("test_ephem.csv")
+    dat.to_csv("test_gnss.csv")
+
+
     return {"bike": bike, "car": car, "walk": walk}
 
 

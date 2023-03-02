@@ -80,7 +80,7 @@ def toDict(ephem):
 
 
 def main():
-    ephem = pd.read_csv("ephem.csv")
+    ephem = pd.read_csv("../ephem.csv")
     gnss = pd.read_csv("gnss_log.csv")
     gnss = gnss[['Svid', 'ReceivedSvTimeNanos', 'X', 'Y', 'Z', 'B']].to_numpy()
     log_ECEF = gnss[:, 2:]
