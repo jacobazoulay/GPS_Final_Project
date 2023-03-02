@@ -38,7 +38,7 @@ def pre_process_files(filePaths, transittype):
         output["TransitType"] = transit_types
         
         # Date time
-        file_name_full = os.path.splitext(filePath)[0]
+        file_name_full = os.path.basename(filePath).split('/')[0]
         file_name = file_name_full.split("_")
         date_time = file_name[2:7]
         date_time = list(map(int,date_time))
@@ -58,9 +58,10 @@ def pre_process_files(filePaths, transittype):
 
 def crawl():
     #go over each text file in directory
-    bike = pre_process_files(glob.glob(os.path.join("Bike/", "*.txt")), "Bike")    
-    car = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")), "Car")
-    walk = pre_process_files(glob.glob(os.path.join("Car/", "*.txt")), "Walk")
+    main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "GNSS_Logger_Data")
+    bike = pre_process_files(glob.glob(os.path.join(main_dir, "Bike/", "*.txt")), "Bike")    
+    car = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Car")
+    walk = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Walk")
 
     return {"bike": bike, "car": car, "walk": walk}
 

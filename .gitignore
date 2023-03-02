@@ -1,3 +1,7 @@
-/gnss_log_2023_02_15_16_25_25.txt
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Others
+# /gnss_log_2023_02_15_16_25_25.txt
 /.idea
 /gnss_log.csv
