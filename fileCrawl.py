@@ -51,7 +51,8 @@ def pre_process_files(filePaths, transittype):
         
         # Ephemeris
         ephem = nasa.get_nasa_ephem(date_time, output['Svid'].unique().tolist())
-        results[file_name_full] = {"data": output, "ephemerides": ephem}
+        ephem["Svid"] = list(ephem.index)
+        results[file_name_full.split('.')[0]] = {"data": output, "ephemeris": ephem}
           
     return results
 
@@ -61,16 +62,10 @@ def crawl():
     main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "GNSS_Logger_Data")
     bike = pre_process_files(glob.glob(os.path.join(main_dir, "Bike/", "*.txt")), "Bike")    
     car = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Car")
-    walk = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Walk")
+    walk = pre_process_files(glob.glob(os.path.join(main_dir, "Walk/", "*.txt")), "Walk")
+    bus = pre_process_files(glob.glob(os.path.join(main_dir, "Bus/", "*.txt")), "Bus")
 
-    eph = bike["gnss_log_2023_02_08_16_23_57.txt"]["ephemerides"]
-    dat = bike["gnss_log_2023_02_08_16_23_57.txt"]["data"]
-
-    eph.to_csv("test_ephem.csv")
-    dat.to_csv("test_gnss.csv")
-
-
-    return {"bike": bike, "car": car, "walk": walk}
+    return {"Bike": bike, "Car": car, "Walk": walk, "Bus": bus}
 
 
 
