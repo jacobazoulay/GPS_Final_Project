@@ -106,7 +106,7 @@ def getSatXYZB(ephem, gnss):
     Bs = []
     for i in range(len(gnss)):
         Svid = gnss[i][0]
-        data = ephem[ephem['sv'] == Svid]
+        data = ephem[ephem['Svid'] == Svid]
         data = toDict(data)
         tx_time = gnss[i][1] / 10 ** 9
         ECEF, E_k = get_sat_ECEF(data, tx_time)
