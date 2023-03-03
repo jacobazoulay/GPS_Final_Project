@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -104,7 +106,7 @@ def getSatXYZB(ephem, gnss):
     Bs = []
     for i in range(len(gnss)):
         Svid = gnss[i][0]
-        data = ephem[ephem['Svid'] == Svid]
+        data = ephem[ephem['sv'] == Svid]
         data = toDict(data)
         tx_time = gnss[i][1] / 10 ** 9
         ECEF, E_k = get_sat_ECEF(data, tx_time)
@@ -141,12 +143,19 @@ def parseFile(filepath, transittype="n/a"):
 
 
 def main():
+    print(os.getcwd())
     ephem = pd.read_csv("ephem.csv")
     gnss = pd.read_csv("gnss_log.csv")
-    gnss = parseFile("gnss_log_2023_02_15_16_25_25.txt", "Test")
+    needed_cols = ['Svid', 'ReceivedSvTimeNanos', "FullBiasNanos", "TimeNanos", "TimeOffsetNanos", "BiasNanos",
+                   "ConstellationType"]
+    gnss = gnss[gnss.columns.intersection(needed_cols)]
+    gnss = gnss.apply(pd.to_numeric)
+
     gnss = calcPseudo(gnss)
     out = getSatXYZB(ephem, gnss)
     print(out)
+
+    # out.to_csv("test_sat_out.csv", index=False)
 
 
 if __name__ == '__main__':

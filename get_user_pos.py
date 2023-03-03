@@ -21,9 +21,9 @@ def solve_pos(x_sat, B, pseudo_meas):
     b_u = 0
     delta_x_b_u = np.ones(4)
     x_est = np.zeros(3)
-    max_iter = 100
-    iters = 0
-    while np.linalg.norm(delta_x_b_u[:3]) > 0.01 and iters < max_iter:
+    count = 0
+    max_count = 300
+    while np.linalg.norm(delta_x_b_u[:3]) > 0.01:
         G = getGMatrix(x_est, x_sat)
         pseudo_exp = getExpectedPseudoRanges(x_est, x_sat, B, b_u)
         delta_p = pseudo_meas - pseudo_exp
@@ -35,7 +35,13 @@ def solve_pos(x_sat, B, pseudo_meas):
         x_est += delta_x_b_u[:-1]
         b_u += delta_x_b_u[-1]
 
-        iters += 1
+        # Sometimes our accuracy requirement is too high
+        if count >= max_count:
+            if np.linalg.norm(delta_x_b_u[:3]) > 10:
+                return np.array([np.nan, np.nan, np.nan])
+            else:
+                return x_est
+        count += 1
 
     return x_est
 
@@ -97,8 +103,12 @@ def getUserXYZ(data):
 
 def main():
     df = pd.read_csv("gnss_log.csv")
+    df = pd.read_csv("get_sat_data_test/test_sat_out.csv")
+    print(df[["X", "Y", "Z", "B"]])
     x_ests = getUserXYZ(df)
     print(x_ests)
+    x_ests.to_csv("test_out.csv")
+    plotXYZ(x_ests)
 
 
 # Press the green button in the gutter to run the script.
