@@ -74,7 +74,8 @@ def solveAll(data):
 def plotXYZ(x_ests):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    ax.scatter(x_ests[:, 0], x_ests[:, 1], x_ests[:, 2])
+    # ax.scatter(x_ests[:, 0], x_ests[:, 1], x_ests[:, 2])
+    ax.scatter(x_ests["X_u"], x_ests["Y_u"], x_ests["Z_u"])
 
     ax.set_title("GPS Positions")
     ax.set_xlabel('X (m)')
@@ -102,15 +103,9 @@ def getUserXYZ(data):
 
 
 def main():
-    df = pd.read_csv("data/Test Data/gnss_log.csv")
-    df = pd.read_csv("get_sat_data_test/test_sat_out.csv")
-    print(df[["X", "Y", "Z", "B"]])
-    x_ests = getUserXYZ(df)
-    print(x_ests)
-    x_ests.to_csv("test_out.csv")
-    plotXYZ(x_ests)
+    user_ECEF = pd.read_csv("data/GNSS_User_ECEF/Bike/gnss_log_2023_02_07_08_51_18_from_RAINS_to_AA272.csv")
+    plotXYZ(user_ECEF)
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()

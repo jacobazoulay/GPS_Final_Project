@@ -1,8 +1,7 @@
 import os
-
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 MU = 3.986005 * 10**14
 OMDOT_E = 7.2921151467 * 10**-5
@@ -124,38 +123,8 @@ def getSatXYZB(ephem, gnss):
     return out
 
 
-def parseFile(filepath, transittype="n/a"):
-    file1 = open(filepath, 'r')
-
-    data = []
-    header = ""
-    for line in file1:
-        if line[:5] == "# Raw":
-            header = line[2:-1].split(",") + ["TransitType"]
-        if line[:3] == "Raw":
-            curRow = line[0:-1].split(",") + [transittype]
-            data.append(curRow)
-
-    df = pd.DataFrame(data)
-    df.columns = header
-
-    return df
-
-
 def main():
-    print(os.getcwd())
-    ephem = pd.read_csv("data/Test Data/ephem.csv")
-    gnss = pd.read_csv("data/Test Data/gnss_log.csv")
-    needed_cols = ['Svid', 'ReceivedSvTimeNanos', "FullBiasNanos", "TimeNanos", "TimeOffsetNanos", "BiasNanos",
-                   "ConstellationType"]
-    gnss = gnss[gnss.columns.intersection(needed_cols)]
-    gnss = gnss.apply(pd.to_numeric)
-
-    gnss = calcPseudo(gnss)
-    out = getSatXYZB(ephem, gnss)
-    print(out)
-
-    # out.to_csv("test_sat_out.csv", index=False)
+    pass
 
 
 if __name__ == '__main__':
