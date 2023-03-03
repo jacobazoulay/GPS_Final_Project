@@ -102,7 +102,7 @@ def getUserXYZ(data):
 
 
 def main():
-    df = pd.read_csv("gnss_log.csv")
+    df = pd.read_csv("data/Test Data/gnss_log.csv")
     df = pd.read_csv("get_sat_data_test/test_sat_out.csv")
     print(df[["X", "Y", "Z", "B"]])
     x_ests = getUserXYZ(df)

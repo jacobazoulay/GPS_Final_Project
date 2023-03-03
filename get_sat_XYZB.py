@@ -144,8 +144,8 @@ def parseFile(filepath, transittype="n/a"):
 
 def main():
     print(os.getcwd())
-    ephem = pd.read_csv("ephem.csv")
-    gnss = pd.read_csv("gnss_log.csv")
+    ephem = pd.read_csv("data/Test Data/ephem.csv")
+    gnss = pd.read_csv("data/Test Data/gnss_log.csv")
     needed_cols = ['Svid', 'ReceivedSvTimeNanos', "FullBiasNanos", "TimeNanos", "TimeOffsetNanos", "BiasNanos",
                    "ConstellationType"]
     gnss = gnss[gnss.columns.intersection(needed_cols)]
