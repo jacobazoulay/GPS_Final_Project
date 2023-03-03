@@ -1,5 +1,5 @@
 from fileCrawl import crawl
-from get_sat_XYYB import calcPseudo, getSatXYZB
+from get_sat_XYZB import calcPseudo, getSatXYZB
 from get_user_pos import getUserXYZ
 import pandas as pd
 import os
@@ -27,14 +27,6 @@ def gnss_logger_2_ecef():
 
         # Loop through each file
         for filename, value in tqdm(transitType_data.items(), desc=transitType_name):
-            print(filename)
-
-            # TODO: Figure out why these are problematic...
-            problematic_files = ["gnss_log_2023_02_15_16_25_25", "gnss_log_2023_02_21_10_26_50", "gnss_log_2023_02_15_14_47_53", "gnss_log_2023_02_22_16_25_52"] # bike
-
-            if any(filename == name for name in problematic_files):
-                continue
-
             # Get the dfs in the dictionary
             ephemeris = value["ephemeris"]
             gnss_data = value["data"]
@@ -70,8 +62,12 @@ def gnss_logger_2_ecef():
     
     return user_ecef_dict
 
-
-
+def load_ecef():
+    '''
+        Loads all the csv's with the user positions in ecef
+        TODO
+    '''
+    pass
 
 if __name__=="__main__":
     gnss_logger_2_ecef()

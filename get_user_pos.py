@@ -21,7 +21,9 @@ def solve_pos(x_sat, B, pseudo_meas):
     b_u = 0
     delta_x_b_u = np.ones(4)
     x_est = np.zeros(3)
-    while np.linalg.norm(delta_x_b_u[:3]) > 0.01:
+    max_iter = 100
+    iters = 0
+    while np.linalg.norm(delta_x_b_u[:3]) > 0.01 and iters < max_iter:
         G = getGMatrix(x_est, x_sat)
         pseudo_exp = getExpectedPseudoRanges(x_est, x_sat, B, b_u)
         delta_p = pseudo_meas - pseudo_exp
@@ -32,6 +34,8 @@ def solve_pos(x_sat, B, pseudo_meas):
 
         x_est += delta_x_b_u[:-1]
         b_u += delta_x_b_u[-1]
+
+        iters += 1
 
     return x_est
 
@@ -51,8 +55,6 @@ def solveAll(data):
 
     x_ests = []
     for i in range(len(idxs) - 1):
-        # if i == 759:
-        #     pass
         pseudo_meas = data[idxs[i]:idxs[i + 1], 1]
         x_sat = data[idxs[i]:idxs[i + 1], 2:5]
         B = data[idxs[i]:idxs[i + 1], 5]
