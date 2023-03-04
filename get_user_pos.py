@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def getExpectedPseudoRanges(x_est, x_sat, B, b_u):
@@ -71,18 +72,24 @@ def solveAll(data):
     return np.array(x_ests)
 
 
-def plotXYZ(x_ests):
+def plotXYZ(x_ests, title = 'GPS Positions', saveplt = False):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     # ax.scatter(x_ests[:, 0], x_ests[:, 1], x_ests[:, 2])
     ax.scatter(x_ests["X_u"], x_ests["Y_u"], x_ests["Z_u"])
 
-    ax.set_title("GPS Positions")
+    ax.set_title(title)
     ax.set_xlabel('X (m)')
     ax.set_ylabel('Y (m)')
     ax.set_zlabel('Z (m)')
 
-    plt.show()
+    if saveplt:
+        saveDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "GNSS_User_ECEF_Plots")
+        filePath = saveDir + '/Bike' + '/' + title +'.png'
+        plt.savefig(filePath)
+        plt.close()
+    else:
+        plt.show()
 
 
 def getUserXYZ(data):
