@@ -23,6 +23,47 @@ def parseFile(filepath, transittype="n/a"):
 
     return df
 
+
+def parseFileFix(filepath, transittype="n/a"):
+    file1 = open(filepath, 'r')
+
+    data = []
+    header = ""
+    for line in file1:
+        if line[:5] == "# Fix":
+            header = line[2:-1].split(",") + ["TransitType"]
+        if line[:3] == "Fix":
+            curRow = line[0:-1].split(",") + [transittype]
+            data.append(curRow)
+
+    df = pd.DataFrame(data)
+    df.columns = header
+
+    return df
+
+
+def pre_process_files_Fix(filePaths, transittype):
+    results = {}
+
+    # Data from file
+    for filePath in filePaths:
+        # Data
+        output = parseFileFix(filePath, transittype)
+        transit_types = output["TransitType"]
+
+        output = output.apply(pd.to_numeric, errors='ignore')
+        output["TransitType"] = transit_types
+
+        # Date time
+        file_name_full = os.path.basename(filePath).split('/')[0]
+        outpath = filePath.replace("Data", "Fix")[:-4]
+
+        results[file_name_full.split('.')[0]] = output
+        output.to_csv(outpath[:-4] + '.csv', index=False)
+
+    return results
+
+
 def pre_process_files(filePaths, transittype):
     results = {}
     
@@ -68,6 +109,17 @@ def crawl():
     return {"Bike": bike, "Car": car, "Walk": walk, "Bus": bus}
 
 
+def crawlFix():
+    # go over each text file in directory
+    main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "GNSS_Logger_Data")
+    bike = pre_process_files_Fix(glob.glob(os.path.join(main_dir, "Bike/", "*.txt")), "Bike")
+    car = pre_process_files_Fix(glob.glob(os.path.join(main_dir, "Car/", "*.txt")), "Car")
+    walk = pre_process_files_Fix(glob.glob(os.path.join(main_dir, "Walk/", "*.txt")), "Walk")
+    bus = pre_process_files_Fix(glob.glob(os.path.join(main_dir, "Bus/", "*.txt")), "Bus")
+
+    return {"Bike": bike, "Car": car, "Walk": walk, "Bus": bus}
+
 
 if __name__ == '__main__':
     crawl()
+    # crawlFix()
