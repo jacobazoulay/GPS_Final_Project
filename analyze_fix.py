@@ -68,7 +68,7 @@ def average_stop_time(df):
     return avg_num_stops, avg_time_per_stop, percent_stopped, stop_idxs
 
 
-def get_acceleration_features(df):
+def get_acceleration_features(df, stop_idxs):
     # Sorting
     df = df.sort_values("UnixTimeMillis")
     df = df.dropna()
@@ -87,13 +87,21 @@ def get_acceleration_features(df):
     # Features
     max_accel = df["acceleration"].max()
     min_accel = df["acceleration"].min()
+    
+    # Avg accel - drop anything below 0.4 m/s
+    df = df[df["SpeedMps"] > 0.4]
+    
     avg_accel = df["acceleration"].mean()
     
     return max_accel, min_accel, avg_accel
 
-def get_speed_features(df):
+def get_speed_features(df, stop_idxs):
     max_speed = df["SpeedMps"].max()
-    avg_speed = 0
+    
+    # Avg speed - drop anything below 0.4 m/s
+    df = df[df["SpeedMps"] > 0.4]
+        
+    avg_speed = df["SpeedMps"].mean()
     
     return max_speed, avg_speed
 
@@ -111,11 +119,11 @@ def pre_process_files(filePaths, transittype):
         features[idx, 0:3] = np.array([avg_num_stops, avg_time_per_stop, percent_stopped])
         
         # Velocity
-        max_speed, avg_speed = get_speed_features(Fix_df)
+        max_speed, avg_speed = get_speed_features(Fix_df, stop_idxs)
         features[idx, 3:5] = np.array([max_speed, avg_speed])
         
         # Acceleration
-        max_accel, min_accel, avg_accel = get_acceleration_features(Fix_df)
+        max_accel, min_accel, avg_accel = get_acceleration_features(Fix_df, stop_idxs)
         
         features[idx,5:8] = np.array([max_accel, min_accel, avg_accel])
 
