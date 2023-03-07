@@ -5,12 +5,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from scipy import stats
-from get_user_pos import plotXYZ
-
-
-def get_max_speed(df):
-    return df["SpeedMps"].max()
-
 
 def average_stop_time(df):
     df = df.sort_values("UnixTimeMillis")
@@ -41,19 +35,60 @@ def average_stop_time(df):
         print(df[["UnixTimeMillis", "SpeedMps"]].iloc[a-1:b+1])
     plt.show()
 
+def get_acceleration_features(df):
+    # Sorting
+    df = df.sort_values("UnixTimeMillis")
+    df = df.dropna()
+    
+    # Time in seconds
+    df["UnixTimeSecond"] = df["UnixTimeMillis"] / 1000
+    
+    # Find acceleration
+    df["acceleration"] = df["SpeedMps"].diff() / df["UnixTimeSecond"].diff()
+    
+    # Find accelerations that are far from std
+    df = df.dropna()
+    df["acceleration_zscore"] = stats.zscore(df["acceleration"])
+    df = df[df["acceleration_zscore"].abs() < 3]
+    
+    # Features
+    max_accel = df["acceleration"].max()
+    min_accel = df["acceleration"].min()
+    avg_accel = df["acceleration"].mean()
+    
+    return max_accel, min_accel, avg_accel
 
-def pre_process_files(filePaths, transittype):
-    results = {}
+def get_speed_features(df):
+    max_speed = df["SpeedMps"].max()
+    avg_speed = 0
+    
+    return max_speed, avg_speed
 
-    max_speeds = []
-    # Data from file
-    for filePath in filePaths:
+def pre_process_files(filePaths, transittype): 
+    # Columns: # Stops / s, Avg Stop Duration, Max speed, Avg Speed, Max Accel, Min Accel, Avg Accel
+    # Idxs:    0            1                  2          3          4          5          6 
+    features = np.zeros((len(filePaths), 7))
+    
+    for idx, filePath in enumerate(filePaths):
+        # Data from file
         Fix_df = pd.read_csv(filePath)
-        average_stop_time(Fix_df)
-        max_speeds.append(get_max_speed(Fix_df))
-
-    results["max_speeds"] = max_speeds
-    return results
+        
+        # Stops
+        # average_stop_time(Fix_df)
+        
+        # Velocity
+        max_speed, avg_speed = get_speed_features(Fix_df)
+        features[idx, 2:4] = np.array([max_speed, avg_speed])
+        
+        # Acceleration
+        max_accel, min_accel, avg_accel = get_acceleration_features(Fix_df)
+        
+        features[idx,4:7] = np.array([max_accel, min_accel, avg_accel])
+    
+    print(np.mean(features, axis=0))
+    print(np.var(features, axis=0))
+    
+    return features
 
 
 def crawl():
