@@ -6,6 +6,10 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 
+# THRESHOLDS
+MIN_SPEED = 0.4
+MAX_ZSCORE = 3
+
 def cleanStops(stops):
     # [ (a1, b1) ... (an, bn) ]
     thresh1 = 6
@@ -30,7 +34,7 @@ def average_stop_time(df):
     df = df.sort_values("UnixTimeMillis")
     df = df.dropna()
     speeds = df["SpeedMps"].values
-    speeds = speeds < 0.4
+    speeds = speeds < MIN_SPEED
 
     T = (df["UnixTimeMillis"].max() - df["UnixTimeMillis"].min()) / 1000
 
@@ -68,7 +72,7 @@ def average_stop_time(df):
     return avg_num_stops, avg_time_per_stop, percent_stopped, stop_idxs
 
 
-def get_acceleration_features(df, stop_idxs):
+def get_acceleration_features(df):
     # Sorting
     df = df.sort_values("UnixTimeMillis")
     df = df.dropna()
@@ -82,24 +86,24 @@ def get_acceleration_features(df, stop_idxs):
     # Find accelerations that are far from std
     df = df.dropna()
     df["acceleration_zscore"] = stats.zscore(df["acceleration"])
-    df = df[df["acceleration_zscore"].abs() < 3]
+    df = df[df["acceleration_zscore"].abs() < MAX_ZSCORE]
     
     # Features
     max_accel = df["acceleration"].max()
     min_accel = df["acceleration"].min()
     
     # Avg accel - drop anything below 0.4 m/s
-    df = df[df["SpeedMps"] > 0.4]
+    df = df[df["SpeedMps"] > MIN_SPEED]
     
     avg_accel = df["acceleration"].mean()
     
     return max_accel, min_accel, avg_accel
 
-def get_speed_features(df, stop_idxs):
+def get_speed_features(df):
     max_speed = df["SpeedMps"].max()
     
     # Avg speed - drop anything below 0.4 m/s
-    df = df[df["SpeedMps"] > 0.4]
+    df = df[df["SpeedMps"] > MIN_SPEED]
         
     avg_speed = df["SpeedMps"].mean()
     
@@ -119,20 +123,15 @@ def pre_process_files(filePaths, transittype):
         features[idx, 0:3] = np.array([avg_num_stops, avg_time_per_stop, percent_stopped])
         
         # Velocity
-        max_speed, avg_speed = get_speed_features(Fix_df, stop_idxs)
+        max_speed, avg_speed = get_speed_features(Fix_df)
         features[idx, 3:5] = np.array([max_speed, avg_speed])
         
         # Acceleration
-        max_accel, min_accel, avg_accel = get_acceleration_features(Fix_df, stop_idxs)
+        max_accel, min_accel, avg_accel = get_acceleration_features(Fix_df)
         
         features[idx,5:8] = np.array([max_accel, min_accel, avg_accel])
 
-    # print(features)
-    print(np.nanmean(features, axis=0))
-    print(np.nanvar(features, axis=0))
-    
-    return features
-
+    return {"mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)}
 
 def crawl():
     #go over each text file in directory
