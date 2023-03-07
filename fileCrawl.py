@@ -121,5 +121,5 @@ def crawlFix():
 
 
 if __name__ == '__main__':
-    crawl()
-    # crawlFix()
+    # crawl()
+    crawlFix()
