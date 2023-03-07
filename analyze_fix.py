@@ -171,7 +171,7 @@ def get_features_for_file(df):
 
 def pre_process_files(filePaths, transittype): 
     # Get files
-    train, validate = split_data_set(filePaths, validation_percentage=0.1, min_time_before_split=60)
+    train, validate = split_data_set(filePaths, validation_percentage=0.25, min_time_before_split=10)
 
     # Columns: # Stops / s, Avg Stop Duration, Avg Percent Stop Time, Max speed, Avg Speed, Max Accel, Min Accel, Avg Accel
     # Idxs:    0            1                  2                      3          4          5          6          7
@@ -179,9 +179,26 @@ def pre_process_files(filePaths, transittype):
     for idx, Fix_df in enumerate(train):      
         features[idx, :] = get_features_for_file(Fix_df)
 
-    print({"transittype": transittype, "# Train sets": len(train), "# Validate sets": len(validate), "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
+    features_val = np.zeros((len(validate), 8))
+    for idx, Fix_df in enumerate(validate):
+        features_val[idx, :] = get_features_for_file(Fix_df)
 
-    return {"mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0), "validate": validate} 
+    # print({"transittype": transittype, "# Train sets": len(train), "# Validate sets": len(validate), "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
+
+    return {"train": features, "validate": features_val}
+
+
+def calcPScore(samples, test):
+
+    p_scores = np.zeros((3, *test.shape))
+    for j, test_key in enumerate(samples):
+        sample = samples[test_key]
+        for i in range(sample.shape[1]):
+            _, p_scores[j, :, i] = stats.ttest_1samp(sample[:, i], test[:, i], axis=0, nan_policy='omit')
+
+    out = np.sum(p_scores, axis=2)
+    print(np.argmax(out, axis=0))
+
 
 def crawl():
     #go over each text file in directory
@@ -190,6 +207,12 @@ def crawl():
     car = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.csv")), "Car")
     walk = pre_process_files(glob.glob(os.path.join(main_dir, "Walk/", "*.csv")), "Walk")
     # bus = pre_process_files(glob.glob(os.path.join(main_dir, "Bus/", "*.csv")), "Bus")
+    validation = {"bike": bike["validate"], "car": car["validate"], "walk": walk["validate"]}
+    train = {"bike": bike["train"], "car": car["train"], "walk": walk["train"]}
+
+    for key in validation:
+        calcPScore(train, validation[key])
+
 
 if __name__ == '__main__':
     crawl()
