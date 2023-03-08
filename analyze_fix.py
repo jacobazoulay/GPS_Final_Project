@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import random
+import seaborn as sns
 
 # THRESHOLDS
 random.seed(0)
@@ -40,7 +41,6 @@ def average_stop_time(df):
 
     T = (df["UnixTimeMillis"].max() - df["UnixTimeMillis"].min()) / 1000
 
-    flip = False
     stops = []
     a, b = 0, 0
     while b < len(speeds):
@@ -63,7 +63,7 @@ def average_stop_time(df):
 
     stop_times = []
     for a, b in stops:
-        stop_time = df["UnixTimeMillis"].iloc[b] - df["UnixTimeMillis"].iloc[a]
+        stop_time = (df["UnixTimeMillis"].iloc[b] - df["UnixTimeMillis"].iloc[a]) / 1000
         stop_times.append(stop_time)
 
     if len(stop_times) > 0:
@@ -171,7 +171,7 @@ def get_features_for_file(df):
 
 def pre_process_files(filePaths, transittype): 
     # Get files
-    train, validate = split_data_set(filePaths, validation_percentage=0.25, min_time_before_split=10)
+    train, test = split_data_set(filePaths, validation_percentage=0.25, min_time_before_split=10)
 
     # Columns: # Stops / s, Avg Stop Duration, Avg Percent Stop Time, Max speed, Avg Speed, Max Accel, Min Accel, Avg Accel
     # Idxs:    0            1                  2                      3          4          5          6          7
@@ -179,25 +179,61 @@ def pre_process_files(filePaths, transittype):
     for idx, Fix_df in enumerate(train):      
         features[idx, :] = get_features_for_file(Fix_df)
 
-    features_val = np.zeros((len(validate), 8))
-    for idx, Fix_df in enumerate(validate):
+    features_val = np.zeros((len(test), 8))
+    for idx, Fix_df in enumerate(test):
         features_val[idx, :] = get_features_for_file(Fix_df)
 
     # print({"transittype": transittype, "# Train sets": len(train), "# Validate sets": len(validate), "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
 
-    return {"train": features, "validate": features_val}
+    return {"train": features, "test": features_val}
 
 
-def calcPScore(samples, test):
+def calcPScore(trains, test):
 
     p_scores = np.zeros((3, *test.shape))
-    for j, test_key in enumerate(samples):
-        sample = samples[test_key]
-        for i in range(sample.shape[1]):
-            _, p_scores[j, :, i] = stats.ttest_1samp(sample[:, i], test[:, i], axis=0, nan_policy='omit')
+    for j, test_key in enumerate(trains):
+        train = trains[test_key]
+        for i in range(train.shape[1]):
+            _, p_scores[j, :, i] = stats.ttest_1samp(train[:, i], test[:, i], axis=0, nan_policy='omit')
+
+    # p_scores= bike: n1 [metric1, ... metric8]        car: n1 [metric1, ... metric8]       walk: n1 [metric1, ... metric8]
+    #                             ...                                   ...                                   ...
+    #                 nn [metric1, ... metric8]             nn [metric1, ... metric8]             nn [metric1, ... metric8]
 
     out = np.sum(p_scores, axis=2)
+    print(p_scores)
+    print(out)
+    print(softmax(out))
     print(np.argmax(out, axis=0))
+
+
+def softmax(x):
+
+    return(np.exp(x - np.max(x, axis=0)) / np.exp(x - np.max(x, axis=0)).sum(axis=0))
+
+
+def saveFeatureData(train, test):
+    for key in train:
+        out = pd.DataFrame(train[key])
+        out.columns = ["Stops_per_s", "Avg_Stop_Duration", "Avg_Percent_Stop_Time", "Max_speed", "Avg_Speed", "Max_Accel", "Min_Accel", "Avg_Accel"]
+        out.to_csv("data/Features/Feature_Data_" + key + ".csv", index=False)
+
+def plotFeatures(train):
+    headers = ["Stops_per_s", "Avg_Stop_Duration", "Avg_Percent_Stop_Time", "Max_speed", "Avg_Speed", "Max_Accel", "Min_Accel", "Avg_Accel"]
+    for i in range(len(headers)):
+        df = pd.DataFrame()
+        for key in train:
+            add = pd.DataFrame({key: train[key][:, i]})
+            df = pd.concat([df, add], axis=1)
+
+        df_melt = pd.melt(df.reset_index(), id_vars=['index'], value_vars=['bike', 'car', 'walk'])
+        # replace column names
+        df_melt.columns = ['index', 'trans_type', 'value']
+        ax = sns.boxplot(x='trans_type', y='value', data=df_melt, color='#99c2a2')
+        ax = sns.swarmplot(x="trans_type", y="value", data=df_melt, color='#7d0013')
+        plt.title(headers[i] + " by Transportation Type")
+        plt.show()
+
 
 
 def crawl():
@@ -207,11 +243,14 @@ def crawl():
     car = pre_process_files(glob.glob(os.path.join(main_dir, "Car/", "*.csv")), "Car")
     walk = pre_process_files(glob.glob(os.path.join(main_dir, "Walk/", "*.csv")), "Walk")
     # bus = pre_process_files(glob.glob(os.path.join(main_dir, "Bus/", "*.csv")), "Bus")
-    validation = {"bike": bike["validate"], "car": car["validate"], "walk": walk["validate"]}
+    test = {"bike": bike["test"], "car": car["test"], "walk": walk["test"]}
     train = {"bike": bike["train"], "car": car["train"], "walk": walk["train"]}
 
-    for key in validation:
-        calcPScore(train, validation[key])
+    # saveFeatureData(train, test)
+    plotFeatures(train)
+    exit()
+    for key in test:
+        calcPScore(train, test[key])
 
 
 if __name__ == '__main__':
