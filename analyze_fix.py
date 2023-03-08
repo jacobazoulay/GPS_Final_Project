@@ -130,12 +130,15 @@ def split_data_set(filePaths, validation_percentage=0.1, min_time_before_split=6
         # Get min and max time and calculate difference in minutes
         time_delta = (data["UnixTimeMillis"].max() - data["UnixTimeMillis"].min()) / (1000*60)
 
-        if time_delta > min_time_before_split:
-            # Split in half
+        if time_delta > min_time_before_split:            
+            # Split into sets that have at minimum the min_time_before_split ime difference
             num_rows = data.shape[0]
-            threshold = int(np.floor(num_rows/2))
-            all_files.append(data.iloc[:threshold,:])
-            all_files.append(data.iloc[threshold:,:])
+            num_min_time_sets = int(np.floor(time_delta / min_time_before_split))
+          
+            for i in range(num_min_time_sets):
+                pre_threshold = int(i*np.floor(num_rows/num_min_time_sets))
+                post_threshold = int((i+1)*np.floor(num_rows/num_min_time_sets))
+                all_files.append(data.iloc[pre_threshold:post_threshold,:])
         else:
             # Don't split in half
             all_files.append(data)
@@ -171,7 +174,7 @@ def get_features_for_file(df):
 
 def pre_process_files(filePaths, transittype): 
     # Get files
-    train, test = split_data_set(filePaths, validation_percentage=0.25, min_time_before_split=10)
+    train, test = split_data_set(filePaths, validation_percentage=0.25, min_time_before_split=5)
 
     # Columns: # Stops / s, Avg Stop Duration, Avg Percent Stop Time, Max speed, Avg Speed, Max Accel, Min Accel, Avg Accel
     # Idxs:    0            1                  2                      3          4          5          6          7
@@ -183,7 +186,7 @@ def pre_process_files(filePaths, transittype):
     for idx, Fix_df in enumerate(test):
         features_val[idx, :] = get_features_for_file(Fix_df)
 
-    # print({"transittype": transittype, "# Train sets": len(train), "# Validate sets": len(validate), "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
+    print({"transittype": transittype, 'True #': len(filePaths), "# Train sets": len(train), "# Validate sets": len(test), "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
 
     return {"train": features, "test": features_val}
 
