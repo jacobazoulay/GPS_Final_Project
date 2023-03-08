@@ -188,8 +188,7 @@ def pre_process_files(filePaths, transittype):
     return {"train": features, "test": features_val}
 
 
-def calcPScore(trains, test):
-
+def calcPScore(trains, test, true_trans, weights=np.ones(8)):
     p_scores = np.zeros((3, *test.shape))
     for j, test_key in enumerate(trains):
         train = trains[test_key]
@@ -201,10 +200,15 @@ def calcPScore(trains, test):
     #                 nn [metric1, ... metric8]             nn [metric1, ... metric8]             nn [metric1, ... metric8]
 
     out = np.sum(p_scores, axis=2)
-    print(p_scores)
-    print(out)
-    print(softmax(out))
-    print(np.argmax(out, axis=0))
+    pred = np.argmax(out, axis=0)
+
+    p_scores_weighted = p_scores * weights
+    out_weighted = np.sum(p_scores_weighted, axis=2)
+    pred_weighted = np.argmax(out_weighted, axis=0)
+
+    ids = {"bike": 0, "car": 1, "walk": 2}
+    print("Unweighted % correct " + true_trans + ": " + str(np.sum(pred == ids[true_trans])/len(pred)))
+    print("Weighted % correct " + true_trans + ": " + str(np.sum(pred_weighted == ids[true_trans])/len(pred_weighted)))
 
 
 def softmax(x):
@@ -220,11 +224,16 @@ def saveFeatureData(train, test):
 
 def plotFeatures(train):
     headers = ["Stops_per_s", "Avg_Stop_Duration", "Avg_Percent_Stop_Time", "Max_speed", "Avg_Speed", "Max_Accel", "Min_Accel", "Avg_Accel"]
+    weights = np.zeros(8)
     for i in range(len(headers)):
         df = pd.DataFrame()
         for key in train:
             add = pd.DataFrame({key: train[key][:, i]})
             df = pd.concat([df, add], axis=1)
+
+        fvalue, pvalue = stats.f_oneway(df['bike'].dropna(), df['car'].dropna(), df['walk'].dropna())
+        print(headers[i], " (F, p): ", fvalue, pvalue)
+        weights[i] = fvalue
 
         df_melt = pd.melt(df.reset_index(), id_vars=['index'], value_vars=['bike', 'car', 'walk'])
         # replace column names
@@ -232,8 +241,9 @@ def plotFeatures(train):
         ax = sns.boxplot(x='trans_type', y='value', data=df_melt, color='#99c2a2')
         ax = sns.swarmplot(x="trans_type", y="value", data=df_melt, color='#7d0013')
         plt.title(headers[i] + " by Transportation Type")
-        plt.show()
+        # plt.show()
 
+    return weights
 
 
 def crawl():
@@ -247,10 +257,10 @@ def crawl():
     train = {"bike": bike["train"], "car": car["train"], "walk": walk["train"]}
 
     # saveFeatureData(train, test)
-    plotFeatures(train)
-    exit()
+    weights = plotFeatures(train)
+
     for key in test:
-        calcPScore(train, test[key])
+        calcPScore(train, test[key], key, weights)
 
 
 if __name__ == '__main__':
