@@ -7,6 +7,9 @@ import numpy as np
 from scipy import stats
 import random
 import seaborn as sns
+import warnings
+warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
+warnings.filterwarnings( "ignore", module = "seaborn\..*" )
 
 # THRESHOLDS
 random.seed(0)
@@ -117,11 +120,11 @@ def get_speed_features(df):
     return max_speed, avg_speed
 
 
-def split_data_set(filePaths, validation_percentage=0.1, min_time_before_split=60):
+def split_data_set(filePaths, validation_percentage=0.1, min_seg_length=30):
     '''
         Splits the data set into training and validation sets
-        Also splits individual files in half if their total time
-        is greater than the min_time_before_split in minutes
+        Also splits individual files into slices that are at least
+        of length equal to min_seg_length
     '''
     # Split files in half if they meet the minimum time
     all_files = []
@@ -133,10 +136,10 @@ def split_data_set(filePaths, validation_percentage=0.1, min_time_before_split=6
         # Get min and max time and calculate difference in minutes
         time_delta = (data["UnixTimeMillis"].max() - data["UnixTimeMillis"].min()) / (1000 * 60)
 
-        if time_delta > min_time_before_split:
+        if time_delta > min_seg_length*2:
             # Split into sets that have at minimum the min_time_before_split ime difference
             num_rows = data.shape[0]
-            num_min_time_sets = int(np.floor(time_delta / min_time_before_split))
+            num_min_time_sets = int(np.floor(time_delta / min_seg_length))
 
             for i in range(num_min_time_sets):
                 pre_threshold = int(i * np.floor(num_rows / num_min_time_sets))
@@ -178,7 +181,7 @@ def get_features_for_file(df):
 
 def pre_process_files(filePaths, transittype):
     # Get files
-    train, test = split_data_set(filePaths, validation_percentage=0.25, min_time_before_split=5)
+    train, test = split_data_set(filePaths, validation_percentage=0.25, min_seg_length=5)
 
     # Columns: # Stops / s, Avg Stop Duration, Avg Percent Stop Time, Max speed, Avg Speed, Max Accel, Min Accel, Avg Accel
     # Idxs:    0            1                  2                      3          4          5          6          7
@@ -265,7 +268,7 @@ def plotFeatures(train):
         ax = sns.boxplot(x='Modality', y=units[i], data=df_melt, color='#99c2a2')
         ax = sns.swarmplot(x="Modality", y=units[i], data=df_melt, color='#7d0013')
         plt.title(headers[i])
-        # plt.show()
+        plt.show()
 
     return weights
 
