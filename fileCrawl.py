@@ -1,7 +1,7 @@
 import os
 import glob
 import pandas as pd
-import get_nasa_ephem as nasa
+import GNSS_2_ECEF.get_nasa_ephem as nasa
 from datetime import datetime,timezone
 
 

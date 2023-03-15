@@ -12,7 +12,7 @@ warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 warnings.filterwarnings( "ignore", module = "seaborn\..*" )
 
 # THRESHOLDS
-random.seed(0)
+random.seed(1)
 MIN_SPEED = 0.4
 MAX_ZSCORE = 3
 
@@ -193,9 +193,8 @@ def pre_process_files(filePaths, transittype):
     for idx, Fix_df in enumerate(test):
         features_val[idx, :] = get_features_for_file(Fix_df)
 
-    print(
-        {"transittype": transittype, 'True #': len(filePaths), "# Train sets": len(train), "# Validate sets": len(test),
-         "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
+    # print({"transittype": transittype, 'True #': len(filePaths), "# Train sets": len(train), "# Validate sets": len(test),
+    #      "mean": np.nanmean(features, axis=0), "var": np.nanvar(features, axis=0)})
 
     return {"train": features, "test": features_val}
 
@@ -283,6 +282,7 @@ def plotPercentCors(percent_cors):
         plt.bar(headers, percent_cors[:, i])
         plt.title("Model Prediction Accuracy - " + titles[i])
         plt.ylabel("Accuracy (%)")
+        plt.ylim([0,1])
         plt.show()
 
 
